@@ -3,7 +3,10 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+GET     /setup                                  controllers.Application.setup
+GET     /confirm-import                         controllers.CollectionController.confirmImport(username: String ?="username")
+GET     /start-import                           controllers.CollectionController.startImport
+#GET     /api/v1/user/:username/collection       controllers.Application.api(username: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

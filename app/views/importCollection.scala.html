@@ -1,0 +1,24 @@
+@(username: String)
+
+@partials.main("Import") {
+    <div class="row">
+        <div class="col-md-12">
+            <div class="jumbotron">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h1>Hi, @username!</h1>
+                        <p class="lead">We need a few minutes to import all the tracks on your vinyl, start indexing by clicking the button below.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <form action="/start-import" method="get">
+                            <input type="hidden" name="username" value="@username" />
+                            <button type="submit" class="btn btn-primary">Import now</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

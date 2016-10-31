@@ -1,0 +1,27 @@
+@()
+
+@partials.main("Setup") {
+    <div class="row">
+        <div class="col-md-12">
+            <div class="jumbotron">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h1>Step 1</h1>
+                        <p class="lead">To index your collection we need to know your username, enter it in the field below.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <form action="/confirm-import" method="get">
+                            <div class="form-group">
+                                <label for="username"></label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Username...">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Next</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
