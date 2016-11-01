@@ -1,5 +1,7 @@
 package controllers
 
+import akka.actor.ActorSystem
+
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{Await, Future, ExecutionContext}
 import scala.concurrent.duration._
@@ -20,8 +22,9 @@ object CollectionController {
   }
 }
 
-class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSClient) extends Controller {
+class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSClient, system: ActorSystem) extends Controller {
   import CollectionController._
+  val storage = system.actorOf(DatabaseController.props)
 
   def setupImport = Action {
     Ok(views.html.setup())
@@ -58,6 +61,7 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
     val emptyQueue = CollectionQueue(randomUUID, username,  ListBuffer.empty[Release])
     val filledQueue = fillQueue(emptyQueue, 1)
 
+    storage ! filledQueue
     Ok(filledQueue.toString)
   }
 
