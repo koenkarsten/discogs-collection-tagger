@@ -3,12 +3,11 @@ package controllers
 import akka.actor.ActorSystem
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.{Await, Future, ExecutionContext}
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 import com.google.inject.Inject
-import play.api.libs.ws.{WSRequest, WSClient}
+import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
-import play.api.libs.json.{JsString, JsNumber, JsArray, JsValue}
+import play.api.libs.json.{JsString, JsNumber, JsArray}
 import controllers.Models.Release
 
 object CollectionController {
@@ -24,7 +23,8 @@ object CollectionController {
 
 class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSClient, system: ActorSystem) extends Controller {
   import CollectionController._
-  val storage = system.actorOf(DatabaseController.props)
+  val storage = system.actorOf(DatabaseController.props(ws))
+  val requests = new RequestController(ws)
 
   def setupImport = Action {
     Ok(views.html.setup())
@@ -35,9 +35,7 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
   }
 
   def fillQueue(queue: CollectionQueue, page: Int): CollectionQueue = {
-    val request: WSRequest = ws.url(s"https://api.discogs.com/users/${queue.username}/collection?per_page=100&page=$page")
-    val futureResponse: Future[JsValue] = request.get().map(response => response.json)
-    val response = Await.result(futureResponse, 10 seconds)
+    val response = requests.getJsonResource(s"https://api.discogs.com/users/${queue.username}/collection?per_page=100&page=$page")
     var queueCopy = queue.copy()
 
     val releases = (response \ "releases").getOrElse(JsArray()).as[JsArray]
