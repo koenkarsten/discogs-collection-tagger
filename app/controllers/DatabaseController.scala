@@ -12,9 +12,9 @@ object DatabaseController {
 }
 
 class DatabaseController extends Actor {
-  val stack = mutable.Stack[Release]()
-  def queueReleases(cq: CollectionQueue): Unit = stack.pushAll(cq.queue.toList)
-  def processRelease(): Unit = if(stack.nonEmpty) println(s"getting ${stack.pop()} from Stack, ${stack.size} remaining")
+  val queue = mutable.Queue[Release]()
+  def queueReleases(cq: CollectionQueue): Unit = queue ++= cq.queue.toList
+  def processRelease(): Unit = if(queue.nonEmpty) println(s"getting ${queue.dequeue()} from Queue, ${queue.size} remaining")
 
   context.system.scheduler.schedule(500 millis, 500 millis) { processRelease() }
 
