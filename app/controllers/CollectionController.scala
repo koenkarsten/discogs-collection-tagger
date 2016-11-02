@@ -1,9 +1,12 @@
 package controllers
 
 import akka.actor.ActorSystem
+import akka.util.Timeout
+import akka.pattern.ask
+import scala.concurrent.duration._
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import com.google.inject.Inject
 import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
@@ -23,8 +26,9 @@ object CollectionController {
 
 class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSClient, system: ActorSystem) extends Controller {
   import CollectionController._
+  implicit val timeout = Timeout(5 seconds)
   val storage = system.actorOf(DatabaseController.props(ws))
-  val requests = new RequestController(ws)
+  val requests = new ApiController(ws)
 
   def setupImport = Action {
     Ok(views.html.setup())
@@ -35,10 +39,10 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
   }
 
   def fillQueue(queue: CollectionQueue, page: Int): CollectionQueue = {
-    val response = requests.getJsonResource(s"https://api.discogs.com/users/${queue.username}/collection?per_page=100&page=$page")
+    val response = requests.getResource(s"https://api.discogs.com/users/${queue.username}/collection?per_page=100&page=$page")
     var queueCopy = queue.copy()
 
-    val releases = (response \ "releases").getOrElse(JsArray()).as[JsArray]
+    val releases = (response.json \ "releases").getOrElse(JsArray()).as[JsArray]
     for(r <- releases.value) {
       val id = (r \ "basic_information" \ "id").getOrElse(JsNumber(0)).as[Int]
       val name = (r \ "basic_information" \ "title").getOrElse(JsString("")).as[String]
@@ -46,7 +50,7 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
       queueCopy.queue += Release(id, name, url, None)
     }
 
-    val pages = (response \ "pagination" \ "pages").getOrElse(JsNumber(1)).as[Int]
+    val pages = (response.json \ "pagination" \ "pages").getOrElse(JsNumber(1)).as[Int]
     println(s"Processed page $page / $pages")
     if(page < pages) {
       queueCopy = fillQueue(queueCopy, page + 1)
@@ -60,7 +64,13 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
     val filledQueue = fillQueue(emptyQueue, 1)
 
     storage ! filledQueue
-    Ok(filledQueue.toString)
+    Ok(views.html.importProgress(filledQueue))
+  }
+
+  def getImportProgress = Action {
+    val future = storage ? DatabaseController.GetQueueMessage
+    val response = Await.result(future, timeout.duration).asInstanceOf[Int]
+    Ok(response.toString)
   }
 
 }

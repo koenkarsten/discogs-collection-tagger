@@ -1,0 +1,33 @@
+@(cq: CollectionController.CollectionQueue)
+
+@partials.main("Import") {
+    <div class="row">
+        <div class="col-md-12">
+            <div class="jumbotron">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>Importing...</p>
+                        <div id="records">
+                            @for(c <- cq.queue.toList) {
+                                <p class="hidden record">@c.name<br /></p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(function() {
+            function updateProgress() {
+                $.ajax("/import-progress").done(function(data, textStatus, jqXHR) {
+                    console.log(data);
+                    $("#records").children(".record").addClass("hidden");
+                    $("#records").children(".record:nth-child("+data+")").removeClass("hidden");
+                });
+            }
+
+            var timer = setInterval(updateProgress, 1000);
+        });
+    </script>
+}
