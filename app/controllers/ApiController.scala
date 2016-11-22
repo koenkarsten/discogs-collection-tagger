@@ -13,9 +13,8 @@ class ApiController(ws: WSClient, duration: FiniteDuration = 10 seconds) extends
   def getResource(url: String): WSResponse = {
     val request: WSRequest = ws.url(url)
     val future: Future[WSResponse] = request.get().map(response => response)
-    val response = Await.result(future, duration)
 
-    response
+    Await.result(future, duration)
   }
 }
 
