@@ -12,6 +12,9 @@
                                 <p class="hidden record">@c.name<br /></p>
                             }
                         </div>
+                        <div id="seconds_remaining">
+                            <label>X</label> records remaining
+                        </div>
                     </div>
                 </div>
             </div>
@@ -24,6 +27,7 @@
                     console.log(data);
                     $("#records").children(".record").addClass("hidden");
                     $("#records").children(".record:nth-child("+data+")").removeClass("hidden");
+                    $("#seconds_remaining").children("label").text(data);
 
                     if(data == 0) {
                         window.location.replace("http://@host/@cq.user.username/dashboard");
@@ -31,7 +35,7 @@
                 });
             }
 
-            var timer = setInterval(updateProgress, 1000);
+            var timer = setInterval(updateProgress, 250);
         });
     </script>
 }

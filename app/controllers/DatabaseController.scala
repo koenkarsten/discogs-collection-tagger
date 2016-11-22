@@ -22,7 +22,7 @@ class DatabaseController(ws: WSClient) extends Actor {
   val requests = new ApiController(ws)
   val queue = mutable.Queue[Release]()
   val storage = Storage
-  context.system.scheduler.schedule(500 millis, 500 millis) { processRelease() }
+  context.system.scheduler.schedule(250 millis, 250 millis) { processRelease() }
 
   def processRelease(): Unit = {
     if(queue.nonEmpty) {
