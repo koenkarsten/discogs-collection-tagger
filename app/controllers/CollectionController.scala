@@ -10,7 +10,7 @@ import scala.concurrent.{Await, ExecutionContext}
 import com.google.inject.Inject
 import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
-import play.api.libs.json.{JsString, JsNumber, JsArray}
+import play.api.libs.json.{JsValue, JsString, JsNumber, JsArray}
 import controllers.Models.{Track, Release, User}
 
 object CollectionController {
@@ -41,9 +41,10 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
     val releases = (response.json \ "releases").getOrElse(JsArray()).as[JsArray]
     for(r <- releases.value) {
       val id = (r \ "basic_information" \ "id").getOrElse(JsNumber(0)).as[Int]
+      val artists = (r \ "basic_information" \ "artists").getOrElse(JsArray()).as[ListBuffer[JsValue]].map(o => (o \ "name").getOrElse(JsString("")).as[String])
       val name = (r \ "basic_information" \ "title").getOrElse(JsString("")).as[String]
       val url = (r \ "basic_information" \ "resource_url").getOrElse(JsString("")).as[String]
-      queue.user.catalogue += Release(id, name, url, ListBuffer.empty[String], ListBuffer.empty[String], ListBuffer.empty[Track])
+      queue.user.catalogue += Release(id, queue.user.username, artists, name, url, ListBuffer.empty[String], ListBuffer.empty[String], ListBuffer.empty[Track])
     }
 
     val pages = (response.json \ "pagination" \ "pages").getOrElse(JsNumber(1)).as[Int]

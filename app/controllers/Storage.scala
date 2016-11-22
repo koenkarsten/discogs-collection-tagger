@@ -51,6 +51,8 @@ object Storage {
         ctx.transaction {
           val rQuery = quote(query[Release].filter(_.id == lift(release.id)).update(
             _.id -> lift(release.id),
+            _.owner -> lift(release.owner),
+            _.artists -> lift(release.artists),
             _.name -> lift(release.name),
             _.resourceURL -> lift(release.resourceURL),
             _.styles -> lift(release.styles),
@@ -67,10 +69,12 @@ object Storage {
             ctx.run(tQuery)
           }
         }
+
+        println(s"\tUpdate Succeeded")
         Success
       } catch {
         case e: Throwable =>
-          println(Console.RED + s"\tQuill encountered: $e" + Console.RESET)
+          println(Console.RED + s"\tUpdate failed: $e" + Console.RESET)
           Failure
       }
     }
@@ -79,6 +83,8 @@ object Storage {
       ctx.transaction {
         val rQuery = quote(query[Release].insert(
           _.id -> lift(release.id),
+          _.owner -> lift(release.owner),
+          _.artists -> lift(release.artists),
           _.name -> lift(release.name),
           _.resourceURL -> lift(release.resourceURL),
           _.styles -> lift(release.styles),
@@ -96,10 +102,11 @@ object Storage {
         }
       }
 
+      println(s"\tInsert Succeeded")
       Success
     } catch {
       case e: Throwable =>
-        println(s"\tInsert failed, trying update instead ($e)")
+        println(s"\tInsert failed, trying update instead")
         updateRelease
     }
   }
