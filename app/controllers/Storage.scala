@@ -12,6 +12,22 @@ object Storage {
 
   val ctx = new JdbcContext[MySQLDialect, Literal with MysqlEscape]("ctx")
   import ctx._
+  implicit val listbufferEncoder: Encoder[ListBuffer[String]] =
+    encoder[ListBuffer[String]](row => (id, listBuffer) => row.setObject(id, listBuffer.mkString("##")), java.sql.Types.VARCHAR)
+  implicit val listbufferDecoder: Decoder[ListBuffer[String]] =
+    decoder[ListBuffer[String]](row => index => ListBuffer[String](row.getString(index).split("##"): _*) )
+  implicit val trackDecoder: Decoder[ListBuffer[Track]] =
+    decoder[ListBuffer[Track]](row => index => ListBuffer[Track](Track(None, 0, "", "", "")))
+
+  def getReleaseByUsername(username: String): List[Release] = {
+    val q = quote {
+      for {
+        r <- query[Release]
+      } yield r
+    }
+
+    ctx.run(q)
+  }
 
   def saveUser(user: User): Status = {
     try {
@@ -25,12 +41,11 @@ object Storage {
         println(s"${Console.RED} Quill encountered: $e ${Console.RESET}")
         Failure
     }
+
+
   }
 
   def saveRelease(release: Release): Status = {
-    implicit val uuidEncoder: Encoder[ListBuffer[String]] =
-      encoder[ListBuffer[String]](row => (id, listBuffer) => row.setObject(id, listBuffer.mkString("##")), java.sql.Types.VARCHAR)
-
     def updateRelease: Status = {
       try {
         ctx.transaction {

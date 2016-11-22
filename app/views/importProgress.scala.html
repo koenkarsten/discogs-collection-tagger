@@ -1,4 +1,4 @@
-@(cq: CollectionController.CollectionQueue)
+@(cq: CollectionController.CollectionQueue, host: String)
 
 @partials.main("Import") {
     <div class="row">
@@ -24,6 +24,10 @@
                     console.log(data);
                     $("#records").children(".record").addClass("hidden");
                     $("#records").children(".record:nth-child("+data+")").removeClass("hidden");
+
+                    if(data == 0) {
+                        window.location.replace("http://@host/@cq.user.username/dashboard");
+                    }
                 });
             }
 
