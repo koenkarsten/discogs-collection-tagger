@@ -1,6 +1,6 @@
 name := "discogs"
 
-version := "1.0"
+version := "1.0.1"
 
 lazy val `discogs` = (project in file(".")).enablePlugins(PlayScala)
 
@@ -16,6 +16,6 @@ libraryDependencies ++= {
     "io.getquill" %% "quill-jdbc" % "1.0.0")
 }
 
-unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )  
+unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
