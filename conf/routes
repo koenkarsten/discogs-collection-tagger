@@ -6,7 +6,10 @@ GET     /confirm-import                         controllers.CollectionController
 GET     /start-import                           controllers.CollectionController.startImport(username: String ?= "username")
 GET     /import-progress                        controllers.CollectionController.getImportProgress
 
+GET     /:user/dashboard                        controllers.DashboardController.home(user)
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
+#GET     /theme/*file                controllers.Assets.at(path="/public/theme", file)
 
     

@@ -60,7 +60,7 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
     val filledQueue = fillQueue(emptyQueue, 1)
 
     storage ! filledQueue
-    Ok(views.html.importProgress(filledQueue))
+    Ok(views.html.importProgress(filledQueue, system.settings.config.getString("app.host")))
   }
 
   def getImportProgress = Action {
