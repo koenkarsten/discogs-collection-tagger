@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <p>Importing...</p>
                         <div id="records">
-                            @for(c <- cq.queue.toList) {
+                            @for(c <- cq.user.catalogue.toList) {
                                 <p class="hidden record">@c.name<br /></p>
                             }
                         </div>

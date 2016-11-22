@@ -11,14 +11,15 @@ import com.google.inject.Inject
 import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
 import play.api.libs.json.{JsString, JsNumber, JsArray}
-import controllers.Models.Release
+import controllers.Models.{Track, Release, User}
 
 object CollectionController {
   def randomUUID = java.util.UUID.randomUUID.toString
-  case class CollectionQueue(uuid: String, username: String, queue: ListBuffer[Release]) {
+
+  case class CollectionQueue(uuid: String, user: User) {
     override def toString = {
-      var r = s"Queue $username $uuid\n"
-      queue.toList.foreach(release => r += s"\t$release\n")
+      var r = s"Queue ${user.username} $uuid\n"
+      user.catalogue.toList.foreach(release => r += s"\t$release\n")
       r
     }
   }
@@ -30,16 +31,11 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
   val storage = system.actorOf(DatabaseController.props(ws))
   val requests = new ApiController(ws)
 
-  def setupImport = Action {
-    Ok(views.html.setup())
-  }
-
-  def confirmImport(username: String) = Action {
-    Ok(views.html.importCollection(username))
-  }
+  def setupImport = Action { Ok(views.html.setup()) }
+  def confirmImport(username: String) = Action { Ok(views.html.importCollection(username)) }
 
   def fillQueue(queue: CollectionQueue, page: Int): CollectionQueue = {
-    val response = requests.getResource(s"https://api.discogs.com/users/${queue.username}/collection?per_page=100&page=$page")
+    val response = requests.getResource(s"https://api.discogs.com/users/${queue.user.username}/collection?per_page=100&page=$page")
     var queueCopy = queue.copy()
 
     val releases = (response.json \ "releases").getOrElse(JsArray()).as[JsArray]
@@ -47,7 +43,7 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
       val id = (r \ "basic_information" \ "id").getOrElse(JsNumber(0)).as[Int]
       val name = (r \ "basic_information" \ "title").getOrElse(JsString("")).as[String]
       val url = (r \ "basic_information" \ "resource_url").getOrElse(JsString("")).as[String]
-      queueCopy.queue += Release(id, name, url, None)
+      queue.user.catalogue += Release(id, name, url, ListBuffer.empty[String], ListBuffer.empty[String], ListBuffer.empty[Track])
     }
 
     val pages = (response.json \ "pagination" \ "pages").getOrElse(JsNumber(1)).as[Int]
@@ -60,7 +56,7 @@ class CollectionController @Inject()(implicit context: ExecutionContext, ws: WSC
   }
 
   def startImport(username: String) = Action {
-    val emptyQueue = CollectionQueue(randomUUID, username,  ListBuffer.empty[Release])
+    val emptyQueue = CollectionQueue(randomUUID, User(username, ListBuffer.empty[Release]))
     val filledQueue = fillQueue(emptyQueue, 1)
 
     storage ! filledQueue
